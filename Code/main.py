@@ -44,7 +44,7 @@ class Main:
         # if not in the databse, add the user to the database 
         self.logged_menu()
 
-    def logged_menu() -> None :
+    def logged_menu(self) -> None :
         # print the menu 
         print("Press 1 to: Add a new order")
         print("Press 2 to: Show payment methods")
