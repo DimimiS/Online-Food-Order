@@ -1,7 +1,11 @@
-import input_utils as iu
+import initialize
+import csv
+# import input_utils as iu
 
 class Main:
     def __init__(self):
+        # create the database
+        self.db = initialize.Foodies("foodies.db", "sqlite.sql")
         # constantly running the app looking for user ption
         while True:
             self.option = self.menu()
@@ -20,7 +24,8 @@ class Main:
         print("Press 2 to: Register")
         print("Press -1 to: Exit")
 
-        # get the user option
+        # get the user option1
+        
         return input()
     
     def login(self) -> None:
@@ -49,7 +54,7 @@ class Main:
         print("Press 1 to: Add a new order")
         print("Press 2 to: Show payment methods")
         print("Press 3 to: Show previous orders")
-        print("Press -1 to: Exit")
+        print("Press -1 to: Go back")
 
         # get the user option
         choice = input()
