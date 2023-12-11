@@ -1,127 +1,122 @@
-CREATE TABLE IF NOT EXISTS "Πελάτης" (
-	"Email" string,
-	"Κάρτα" string,
-	"Ονοματεπώνυμο" string,
-	"Κωδικός Λογαριασμού" string,
-	"Διεύθυνση?" string,
-	PRIMARY KEY ("Email")
+CREATE TABLE IF NOT EXISTS "Customer" (
+	"email" string,
+	"card" string,
+	"fullName" string,
+	"accountId" string,
+	PRIMARY KEY ("email")
 );
 
-CREATE TABLE IF NOT EXISTS "Κατάστημα" (
-	"Κωδικός Καταστήματος" integer,
-	"Ωράριο" string,
-	"Διεύθυνση" string,
-	"Κριτική" decimal,
-	PRIMARY KEY ("Κωδικός Καταστήματος")
+CREATE TABLE IF NOT EXISTS "Store" (
+	"storeId" integer,
+	"workHours" string,
+	"location" string,
+	PRIMARY KEY ("storeId")
 );
 
-CREATE TABLE IF NOT EXISTS "Κατηγορία" (
-	"Όνομα" string,
-	PRIMARY KEY ("Όνομα")
+CREATE TABLE IF NOT EXISTS "Category" (
+	"name" string,
+	PRIMARY KEY ("name")
 );
 
-CREATE TABLE IF NOT EXISTS "Ντελιβεράς" (
-	"ΑΦΜ" integer,
-	"Διαθεσιμοτητα" boolean,
-	PRIMARY KEY ("ΑΦΜ")
+CREATE TABLE IF NOT EXISTS "Delivery" (
+	"AFM" integer,
+	"availability" boolean,
+	PRIMARY KEY ("AFM")
 );
 
-CREATE TABLE IF NOT EXISTS "Εξυπηρέτηση Πελατών" (
-	"ΑΦΜ" integer,
-	"Διαθεσιμότητα" boolean,
-	PRIMARY KEY ("ΑΦΜ")
+CREATE TABLE IF NOT EXISTS "Customer Support" (
+	"AFM" integer,
+	"availability" boolean,
+	PRIMARY KEY ("AFM")
 );
 
-CREATE TABLE IF NOT EXISTS "Ανήκει" (
-	"Όνομα Κατηγορίας" string,
-	"Όνομα Πιάτου" string,
-	FOREIGN KEY ("Όνομα Κατηγορίας") REFERENCES "Κατηγορία" ("Όνομα")
+CREATE TABLE IF NOT EXISTS "Belongs" (
+	"categoryName" string,
+	"dishName" string,
+	FOREIGN KEY ("name") REFERENCES "Category" ("name")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("Όνομα Πιάτου") REFERENCES "Πιάτο" ("Όνομα")
+	FOREIGN KEY ("dishName") REFERENCES "Dish" ("dishName")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "Περιέχει" (
-	"Κωδικός Παραγγελίας" integer,
-	"Κωδικός Καταστήματος" integer,
-	"Όνομα Πιάτου" string,
-	"Ποσότητα" integer,
-	FOREIGN KEY ("Κωδικός Παραγγελίας") REFERENCES "Παραγγελία" ("Κωδικός Παραγγελίας")
+CREATE TABLE IF NOT EXISTS "Includes" (
+	"orderId" integer,
+	"storeId" integer,
+	"dishName" string,
+	"quantity" integer,
+	FOREIGN KEY ("orderId") REFERENCES "Order" ("orderId")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("Κωδικός Καταστήματος") REFERENCES "Πιάτο" ("Κωδικός Καταστήματος(Φτιάχνει)")
+	FOREIGN KEY ("storeId") REFERENCES "Dish" ("storeId")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("Όνομα Πιάτου") REFERENCES "Πιάτο" ("Όνομα")
+	FOREIGN KEY ("dishName") REFERENCES "Dish" ("dishName")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "Αξιολογεί" (
-	"" 
-);
-
-CREATE TABLE IF NOT EXISTS "Ορίζει Αγαπημένο" (
-	"Κωδικός Καταστήματος" integer,
-	"Email" string,
-	FOREIGN KEY ("Κωδικός Καταστήματος") REFERENCES "Κατάστημα" ("Κωδικός Καταστήματος")
+CREATE TABLE IF NOT EXISTS "Sets Favourite" (
+	"storeId" integer,
+	"email" string,
+	FOREIGN KEY ("storeId") REFERENCES "Store" ("storeId")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("Email") REFERENCES "Πελάτης" ("Email")
+	FOREIGN KEY ("email") REFERENCES "Customer" ("email")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "Πιάτο" (
-	"Όνομα" string,
-	"Κωδικός Καταστήματος(Φτιάχνει)" integer,
-	"Διαθεσιμότητα" boolean,
-	"Τιμή" decimal,
-	PRIMARY KEY ("Όνομα", "Κωδικός Καταστήματος(Φτιάχνει)"),
-	FOREIGN KEY ("Κωδικός Καταστήματος(Φτιάχνει)") REFERENCES "Κατάστημα" ("Κωδικός Καταστήματος")
+CREATE TABLE IF NOT EXISTS "Dish" (
+	"dishName" string,
+	"storeId" integer,
+	"availability" boolean,
+	"price" decimal,
+	PRIMARY KEY ("dishName", "storeId"),
+	FOREIGN KEY ("storeId") REFERENCES "Store" ("storeId")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "Παραγγελία" (
-	"Κωδικός Παραγγελίας" integer,
-	"Αλλεργίες" text,
-	"Email Πελάτη" string,
-	"ΑΦΜ Ντελιβερά" integer,
-	"Ώρα Παραγγελίας" timestamp,
-	"Ημερομηνία Παραγγελίας" date,
-	"Ώρα Αξιολόγησης" timestamp,
-	"Κείμενο Αξιολόγησης" text,
-	"Σκορ Αξιολόγησης" decimal,
-	"Ώρα Παραλαβής " timestamp,
-	"Χρόνος Παράδοσης " timestamp,
-	"Πραγματικός Χρόνος Παράδοσης" timestamp,
-	PRIMARY KEY ("Κωδικός Παραγγελίας"),
-	FOREIGN KEY ("Email Πελάτη") REFERENCES "Πελάτης" ("Email")
+CREATE TABLE IF NOT EXISTS "Order" (
+	"orderId" integer,
+	"comment" text,
+	"customerEmail" string,
+	"deliveryAFM" integer,
+	"orderTime" timestamp,
+	"orderDate" date,
+	"rateTime" timestamp,
+	"rateText" text,
+	"rateScore" decimal,
+	"pickupTime" timestamp,
+	"exp_deliveryTime" timestamp,
+	"deliveryTime" timestamp,
+	"address" string,
+	PRIMARY KEY ("orderId"),
+	FOREIGN KEY ("customerEmail") REFERENCES "Customer" ("email")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("ΑΦΜ Ντελιβερά") REFERENCES "Ντελιβεράς" ("ΑΦΜ")
+	FOREIGN KEY ("deliveryAFM") REFERENCES "Delivery" ("AFM")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "Αίτηση Αλλαγής" (
-	"Κωδικός Αίτησης" integer,
-	"Κωδικός Παραγγελίας" integer,
-	"Email Πελάτη" string,
-	"ΑΦΜ Υπαλλήλου" integer,
-	"Ώρα" timestamp,
-	"Τρόπος" string,
-	PRIMARY KEY ("Κωδικός Αίτησης"),
-	FOREIGN KEY ("Κωδικός Παραγγελίας") REFERENCES "Παραγγελία" ("Κωδικός Παραγγελίας")
+CREATE TABLE IF NOT EXISTS "Change request" (
+	"requestId" integer,
+	"orderId" integer,
+	"customerEmail" string,
+	"AFM" integer,
+	"time" timestamp,
+	"payment" string,
+	PRIMARY KEY ("requestId"),
+	FOREIGN KEY ("orderId") REFERENCES "Order" ("orderId")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("Email Πελάτη") REFERENCES "Πελάτης" ("Email")
+	FOREIGN KEY ("customerEmail") REFERENCES "Customer" ("email")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("ΑΦΜ Υπαλλήλου") REFERENCES "Εξυπηρέτηση Πελατών" ("ΑΦΜ")
+	FOREIGN KEY ("AFM") REFERENCES "Customer Support" ("AFM")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
