@@ -43,3 +43,10 @@ Saving the Data/foodie.db database as Data/foodie.sqlite is for the benefit of v
 
 >[!WARNING]
 > Run the Code/App on the root of the directory, not inside the Code folder 
+
+
+To create the database : 
+```bash
+python Code/intialize.py
+```
+
