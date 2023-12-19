@@ -90,6 +90,24 @@ class Foodies:
         del csv_columns 
         
 
+    def check_passwd(self, user_email, user_password):
+
+        query = "SELECT password from Customer where email=?"
+        try: 
+            cursor_password = self.conn.execute(query, [user_email])
+            hashed = cursor_password.fetchone()[0]
+
+        except Exception as e:
+            print(e)
+            print(query)
+            print(user_email)
+
+            # self.conn.commit()
+
+        
+        return bcrypt.checkpw(user_password.encode('utf-8'), hashed)
+
+
 
 # def generate(script_path, db_path):
 #     with sqlite3.connect(db_path) as conn:

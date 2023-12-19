@@ -31,6 +31,7 @@ class USER:
 
 
 
+
 if __name__ == "__main__" : 
     file = 'Data/foodies.sqlite'
     user = USER(file)
