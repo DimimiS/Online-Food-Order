@@ -81,8 +81,14 @@ class Foodies:
         for i in range(5): 
             customer = customers[i]
             customer['password'] = self.hashing(customer['first_name'])
+            customer['salt'] = self.salt
             cols = self.tables['Customer']
-            self.insert_data("Customer", [customer[column] for column  in cols if column in csv_columns ])
+            self.insert_data("Customer", [customer[column] for column  in cols ])
+
+        # Deleting the list 
+        del customers
+        del csv_columns 
+        
 
 
 # def generate(script_path, db_path):

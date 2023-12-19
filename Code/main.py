@@ -1,11 +1,14 @@
 import initialize
 import csv
+from initialize import Foodies
+from user import USER
 # import input_utils as iu
 
 class Main:
-    def __init__(self):
+    def __init__(self, database_path, sql_path):
         # create the database
-        self.db = initialize.Foodies("foodies.db", "sqlite.sql")
+        self.db = Foodies(database_path, sql_path)
+        self.users = USER(database_path)
         # constantly running the app looking for user ption
         while True:
             self.option = self.menu()
@@ -71,6 +74,8 @@ class Main:
 
 
 if __name__ == "__main__":
-    Main()
+    database_path="foodies.db" 
+    sql_path="sqlite.sql"
+    app = Main(database_path, sql_path)
 
 
