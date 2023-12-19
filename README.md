@@ -35,3 +35,11 @@ pip freeze > Code/requirements.txt
 ```bash
 pip install -r Code/requirements.txt 
 ```
+
+
+# Notes 
+
+Saving the Data/foodie.db database as Data/foodie.sqlite is for the benefit of viewing it from vscode 
+
+>[!WARNING]
+> Run the Code/App on the root of the directory, not inside the Code folder 
