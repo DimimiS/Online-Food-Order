@@ -1,4 +1,5 @@
 accountId,first_name,last_name,email,address,address_number,floor
+0,admin,admin,admin@localhost,localhost,1,1
 1,Maudie,Hulse,mhulse0@yahoo.com,Favierou,45,1
 2,Iago,De'Ath,ideath1@wordpress.org,Ipirou,23,5
 3,Billy,Feakins,bfeakins2@wordpress.org,Doiranis,97,5

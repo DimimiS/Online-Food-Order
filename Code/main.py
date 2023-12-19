@@ -7,7 +7,9 @@ from user import USER
 class Main:
     def __init__(self, database_path, sql_path):
         # create the database
+        
         self.db = Foodies(database_path, sql_path)
+        
         self.users = USER(database_path)
         # constantly running the app looking for user ption
         while True:
@@ -38,7 +40,7 @@ class Main:
 
         # check if the user is in the database 
         # at the time testing the functionality with just one user
-        if email == "admin" and password == "admin":
+        if self.users.check_passwd(email, password):
             self.logged_menu()
         else:
             print("Invalid email or password")
@@ -74,8 +76,8 @@ class Main:
 
 
 if __name__ == "__main__":
-    database_path="foodies.db" 
-    sql_path="sqlite.sql"
+    database_path="Data/foodies.sqlite" 
+    sql_path="ERD/sqlite.sql"
     app = Main(database_path, sql_path)
 
 

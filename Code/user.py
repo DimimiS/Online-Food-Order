@@ -12,12 +12,22 @@ class USER:
         pass 
 
     def check_passwd(self, user_email, user_password):
-        query = "SELECT password from Customer where id={}".format(user_email)
-        cursor_password = self.conn.execute(query)
 
-        hashed = cursor_password.fetchone()[0].encode('utf-8')
+        query = "SELECT password from Customer where email=?"
+        try: 
+            cursor_password = self.conn.execute(query, [user_email])
+            hashed = cursor_password.fetchone()[0]
+
+        except Exception as e:
+            print(e)
+            print(query)
+            print(user_email)
+
+            # self.conn.commit()
+
         
         return bcrypt.checkpw(user_password.encode('utf-8'), hashed)
+
 
 
 
