@@ -73,6 +73,10 @@ class Foodies:
         }
 
     def fill_database(self):
+        self.fill_database_customers()
+        self.fill_database_restaurants()
+
+    def fill_database_customers(self):
         """Fills the database with the data from the csv files"""
 
         #  -------------------  FILLING THE CUSTOMER TABLE -------------------
@@ -113,9 +117,42 @@ class Foodies:
 
         # Deleting the lists to save on memory managing
         del customers
+        del customer
         del csv_columns
 
         #  -------------------  FILLING THE RESTAURANT TABLE -------------------
+
+    def fill_database_restaurants(self):
+        # point to the datapath of the csv
+        restaurant_file = "Data/restaurants2.csv"
+        csv_columns = []
+        restaurants = []
+
+        # open the csv file and read it line by line
+        with open(restaurant_file, "r") as file:
+            for i, line in enumerate(file):
+                if i == 0:
+                    # only for the first line keep the column names that are stored
+                    csv_columns = line.strip().split(",")
+                    continue
+                row_values = line.strip().split(",")
+                restaurant = {}
+                for j, word in enumerate(row_values):
+                    # for every row, split the line by the comma and store the values in a dictionary, with keys as the column names and values the split values of the row
+                    # append a dictionary
+                    # restaurant.append({})
+                    # to the last appended dictionary add the values based on the keys that have been given
+                    restaurant[csv_columns[j]] = word
+                    restaurants.append(restaurant)
+        for i in range(5):
+            restaurant = restaurants[i]
+            # get the columns of the restaurant table automatically instead of hardcoding them
+            cols = self.tables["Store"]
+            # create a list of the values of the customer dictionary based on the columns of the Customer table
+            self.insert_data("Store", [restaurant[column] for column in cols])
+        del csv_columns
+        del restaurants
+        del restaurant
 
     def check_passwd(self, user_email, user_password):
         """Checks if the password is correct for the given email"""
