@@ -101,7 +101,7 @@ class Foodies:
                     # customer.append({})
                     # to the last appended dictionary add the values based on the keys that have been given
                     customer[csv_columns[j]] = word
-                    customers.append(customer)
+                customers.append(customer)
 
         # for customer in customers : Here I have only added 5 customers
         for i in range(5):
