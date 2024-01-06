@@ -143,7 +143,7 @@ class Foodies:
                     # restaurant.append({})
                     # to the last appended dictionary add the values based on the keys that have been given
                     restaurant[csv_columns[j]] = word
-                    restaurants.append(restaurant)
+                restaurants.append(restaurant)
         for i in range(5):
             restaurant = restaurants[i]
             # get the columns of the restaurant table automatically instead of hardcoding them
