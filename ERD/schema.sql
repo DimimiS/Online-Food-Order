@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS Customer (
 
 CREATE TABLE IF NOT EXISTS Store (
 	storeId integer,
+	name VARCHAR(255),
+	phone VARCHAR(255),
 	workHours VARCHAR(255),
 	location VARCHAR(255),
 	PRIMARY KEY (storeId)
