@@ -75,6 +75,7 @@ class Foodies:
     def fill_database(self):
         self.fill_database_customers()
         self.fill_database_restaurants()
+        self.fill_database_categories()
 
     def fill_database_customers(self):
         """Fills the database with the data from the csv files"""
@@ -124,7 +125,7 @@ class Foodies:
 
     def fill_database_restaurants(self):
         # point to the datapath of the csv
-        restaurant_file = "Data/restaurants2.csv"
+        restaurant_file = "Data/restaurants.csv"
         csv_columns = []
         restaurants = []
 
@@ -138,10 +139,6 @@ class Foodies:
                 row_values = line.strip().split(",")
                 restaurant = {}
                 for j, word in enumerate(row_values):
-                    # for every row, split the line by the comma and store the values in a dictionary, with keys as the column names and values the split values of the row
-                    # append a dictionary
-                    # restaurant.append({})
-                    # to the last appended dictionary add the values based on the keys that have been given
                     restaurant[csv_columns[j]] = word
                 restaurants.append(restaurant)
         for i in range(5):
@@ -153,6 +150,38 @@ class Foodies:
         del csv_columns
         del restaurants
         del restaurant
+
+    def fill_database_categories(self):
+        # point to the datapath of the csv
+        category_file = "Data/restaurants.csv"
+        csv_columns = []
+        categories = []
+
+        # open the csv file and read it line by line
+        with open(category_file, "r") as file:
+            for i, line in enumerate(file):
+                if i == 0:
+                    # only for the first line keep the column names that are stored
+                    csv_columns = line.strip().split(",")
+
+                    continue
+                row_values = line.strip().split(",")
+                category = {}
+                # for j, word in enumerate(row_values):
+                # for every row, split the line by the comma and store the values in a dictionary, with keys as the column names and values the split values of the row
+                # append a dictionary
+                # category.append({})
+                # to the last appended dictionary add the values based on the keys that have been given
+                category[csv_columns[-1]] = row_values[-1]
+                categories.append(category)
+                # category = categories[i]
+
+                # create a list of the values of the customer dictionary based on the columns of the Customer table
+                self.insert_data("Category", [category["category"]])
+
+        del csv_columns
+        del categories
+        del category
 
     def check_passwd(self, user_email, user_password):
         """Checks if the password is correct for the given email"""
@@ -170,6 +199,39 @@ class Foodies:
             # self.conn.commit()
 
         return bcrypt.checkpw(user_password.encode("utf-8"), hashed)
+
+    def createMockupFavourites(self):
+        """Creates mockup orders for the database"""
+
+        # get the customer ids
+        customer_ids = [
+            customer[0] for customer in self.conn.execute("SELECT id FROM Customer")
+        ]
+        # get the restaurant ids
+        restaurant_ids = [
+            restaurant[0] for restaurant in self.conn.execute("SELECT id FROM Store")
+        ]
+
+        # create 5 orders for each customer
+        for customer_id in customer_ids:
+            for i in range(5):
+                # create a random order
+                order = self.createRandomFavourite(customer_id, restaurant_ids)
+                # insert the order into the database
+                self.insert_data("Favourite", order)
+
+    def createRandomFavourite(self, customer_id, restaurant_ids):
+        """Creates a random order for the given customer id"""
+
+        from random import randint
+
+        # create a random order
+        order = [
+            customer_id,
+            restaurant_ids[randint(0, len(restaurant_ids) - 1)],
+            randint(1, 5),
+        ]
+        return order
 
 
 # def generate(script_path, db_path):
