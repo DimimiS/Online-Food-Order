@@ -7,6 +7,8 @@ import sys
 class Foodies:
     def __init__(self, db_path, sqlfile):
         try:
+            with open(db_path, "w"):
+                pass
             self.conn = sqlite3.connect(db_path)
             self.sqlfile = sqlfile
             self.salt = bcrypt.gensalt()
@@ -40,6 +42,32 @@ class Foodies:
             print(e)
             print(command)
             print(data)
+
+    def update_data(self, table_name, data, condition):
+        """data is the list of the values to be inserted into the table"""
+
+        command = f"""UPDATE {table_name} SET {','.join([f'{self.tables[table_name][i]}=?' for i in range(len(data))])} WHERE {condition}"""
+        try:
+            # SQLIte function execute gets, will go and replace every ? with the corresponding value in the data list, automatically sanitizing the data.
+            self.conn.execute(command, data)
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+            print(command)
+            print(data)
+
+    def delete_data(self, table_name, condition):
+        """data is the list of the values to be inserted into the table"""
+
+        command = f"""DELETE FROM {table_name} WHERE {condition}"""
+        try:
+            # SQLIte function execute gets, will go and replace every ? with the corresponding value in the data list, automatically sanitizing the data.
+            self.conn.execute(command)
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+            print(command)
+            print(table_name)
 
     def generate_db(self):
         # creat the database, calling forth the sql script and running it
@@ -76,6 +104,7 @@ class Foodies:
         self.fill_database_customers()
         self.fill_database_restaurants()
         self.fill_database_categories()
+        self.fill_database_dishes()
 
     def fill_database_customers(self):
         """Fills the database with the data from the csv files"""
@@ -182,6 +211,36 @@ class Foodies:
         del csv_columns
         del categories
         del category
+
+    def fill_database_dishes(self):
+        # point to the datapath of the csv
+        category_file = "Data/dishes.csv"
+        csv_columns = []
+        dishes = []
+
+        # open the csv file and read it line by line
+        with open(category_file, "r") as file:
+            for i, line in enumerate(file):
+                if i == 0:
+                    # only for the first line keep the column names that are stored
+                    csv_columns = line.strip().split(",")
+
+                    continue
+                row_values = line.strip().split(",")
+                dish = {}
+                for j, word in enumerate(row_values):
+                    dish[csv_columns[j]] = word
+                # to the last appended dictionary add the values based on the keys that have been given
+                dishes.append(dish)
+                # category = categories[i]
+                cols = self.tables["Dish"]
+
+                # create a list of the values of the customer dictionary based on the columns of the Customer table
+                self.insert_data("Dish", [dish[column] for column in cols])
+
+        del csv_columns
+        del dishes
+        del dish
 
     def check_passwd(self, user_email, user_password):
         """Checks if the password is correct for the given email"""
