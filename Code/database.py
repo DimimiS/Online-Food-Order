@@ -4,6 +4,15 @@ import bcrypt
 import sys
 
 
+def count(func):
+    def wrapper(*args, **kwargs):
+        wrapper.calls += 1
+        return func(*args, **kwargs)
+
+    wrapper.calls = 0
+    return wrapper
+
+
 class Foodies:
     def __init__(self, db_path, sqlfile):
         try:
@@ -105,6 +114,7 @@ class Foodies:
         self.fill_database_restaurants()
         self.fill_database_categories()
         self.fill_database_dishes()
+        self.createMockupOrders()
 
     def fill_database_customers(self):
         """Fills the database with the data from the csv files"""
@@ -241,6 +251,85 @@ class Foodies:
         del csv_columns
         del dishes
         del dish
+
+    @count
+    def createOrder(self, customer_email, restaurant_id, dishes):  # , quantities):
+        """Creates an order for the given customer id"""
+
+        order = {}
+        # find data of customer in database
+        customer = self.conn.execute(
+            "SELECT * FROM Customer WHERE email=?", [customer_email]
+        ).fetchone()
+
+        # find if the store is open
+        store = self.conn.execute(
+            "SELECT * FROM Store WHERE storeId=?", [restaurant_id]
+        ).fetchone()
+
+        # find if the dish is available
+        for dishName in dishes:
+            dish = self.conn.execute(
+                "SELECT * FROM Dish WHERE dishName=?", [dishName[0]]
+            ).fetchone()
+            if dish[2] == "no":
+                print("{dishName} not available")
+
+        order["orderId"] = int(f"{customer[0]}{self.createOrder.calls}")
+        order["comment"] = ""
+        order["customerEmail"] = customer_email
+        order["deliveryAFM"] = 123456789
+        order["orderTime"] = "12:12:12"
+        order["orderDate"] = "2020-12-12"
+        order["rateTime"] = "12:12:13"
+        order["rateText"] = ""
+        order["rateScore"] = 5
+        order["pickupTime"] = "12:12:12"
+        order["exp_deliveryTime"] = "12:12:12"
+        order["deliveryTime"] = "00:30:00"
+        order["address"] = f"{customer[4]} {customer[5]}"
+
+        # create the order
+        # order = [
+        #     customer_id,
+        #     restaurant_id,
+        #     ",".join(dishes),
+        #     ",".join([str(quantity) for quantity in quantities]),
+        # ]
+
+        cols = self.tables["OrderT"]
+        # insert the order into the database
+        self.insert_data("OrderT", [order[column] for column in cols])
+
+    def createMockupOrders(self):
+        """Creates mockup orders for the database"""
+
+        # get the customer ids
+        # customer = (first_element,)
+        # email = customer[0]
+        customer_emails = [
+            customer[0] for customer in self.conn.execute("SELECT email FROM Customer")
+        ]
+        # get the restaurant ids
+        restaurant_ids = [
+            restaurant[0]
+            for restaurant in self.conn.execute("SELECT storeId FROM Store")
+        ]
+
+        # create 5 orders for each customer
+        for customer_email, restaurant_id in zip(customer_emails, restaurant_ids):
+            # get all dishes from the restaurant
+            print(restaurant_id)
+            dishes = [
+                dish
+                for dish in self.conn.execute(
+                    "SELECT dishName FROM Dish WHERE storeId=?", [restaurant_id]
+                )
+            ]
+            # create a random order
+            self.createOrder(customer_email, restaurant_id, dishes)
+            # insert the order into the database
+            # self.insert_data("Order", order)
 
     def check_passwd(self, user_email, user_password):
         """Checks if the password is correct for the given email"""

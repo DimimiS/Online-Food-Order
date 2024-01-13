@@ -1,7 +1,25 @@
 Find what restaurants are open
 Find if restaurant is open
 Find what restaurants are close (Area Code)
+SELECT
+  *
+FROM
+  restaurants
+WHERE
+  location LIKE CONCAT (
+    '%',
+    (
+      SELECT
+        location
+      FROM
+        users
+      WHERE
+        user_id = 'user_id'
+    ),
+    '%'
+  );
 Find your orders (newer is the last one of them)
+
 Find order information from order_id
 Find restaurant menu
 Find restaurants based on categories 
