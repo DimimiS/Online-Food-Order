@@ -4,9 +4,20 @@ import bcrypt
 import sys
 
 
+def count(func):
+    def wrapper(*args, **kwargs):
+        wrapper.calls += 1
+        return func(*args, **kwargs)
+
+    wrapper.calls = 0
+    return wrapper
+
+
 class Foodies:
     def __init__(self, db_path, sqlfile):
         try:
+            with open(db_path, "w"):
+                pass
             self.conn = sqlite3.connect(db_path)
             self.sqlfile = sqlfile
             self.salt = bcrypt.gensalt()
@@ -41,6 +52,32 @@ class Foodies:
             print(command)
             print(data)
 
+    def update_data(self, table_name, data, condition):
+        """data is the list of the values to be inserted into the table"""
+
+        command = f"""UPDATE {table_name} SET {','.join([f'{self.tables[table_name][i]}=?' for i in range(len(data))])} WHERE {condition}"""
+        try:
+            # SQLIte function execute gets, will go and replace every ? with the corresponding value in the data list, automatically sanitizing the data.
+            self.conn.execute(command, data)
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+            print(command)
+            print(data)
+
+    def delete_data(self, table_name, condition):
+        """data is the list of the values to be inserted into the table"""
+
+        command = f"""DELETE FROM {table_name} WHERE {condition}"""
+        try:
+            # SQLIte function execute gets, will go and replace every ? with the corresponding value in the data list, automatically sanitizing the data.
+            self.conn.execute(command)
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+            print(command)
+            print(table_name)
+
     def generate_db(self):
         # creat the database, calling forth the sql script and running it
         self.create_database()
@@ -73,6 +110,13 @@ class Foodies:
         }
 
     def fill_database(self):
+        self.fill_database_customers()
+        self.fill_database_restaurants()
+        self.fill_database_categories()
+        self.fill_database_dishes()
+        self.createMockupOrders()
+
+    def fill_database_customers(self):
         """Fills the database with the data from the csv files"""
 
         #  -------------------  FILLING THE CUSTOMER TABLE -------------------
@@ -97,7 +141,7 @@ class Foodies:
                     # customer.append({})
                     # to the last appended dictionary add the values based on the keys that have been given
                     customer[csv_columns[j]] = word
-                    customers.append(customer)
+                customers.append(customer)
 
         # for customer in customers : Here I have only added 5 customers
         for i in range(5):
@@ -113,9 +157,179 @@ class Foodies:
 
         # Deleting the lists to save on memory managing
         del customers
+        del customer
         del csv_columns
 
         #  -------------------  FILLING THE RESTAURANT TABLE -------------------
+
+    def fill_database_restaurants(self):
+        # point to the datapath of the csv
+        restaurant_file = "Data/restaurants.csv"
+        csv_columns = []
+        restaurants = []
+
+        # open the csv file and read it line by line
+        with open(restaurant_file, "r") as file:
+            for i, line in enumerate(file):
+                if i == 0:
+                    # only for the first line keep the column names that are stored
+                    csv_columns = line.strip().split(",")
+                    continue
+                row_values = line.strip().split(",")
+                restaurant = {}
+                for j, word in enumerate(row_values):
+                    restaurant[csv_columns[j]] = word
+                restaurants.append(restaurant)
+        for i in range(5):
+            restaurant = restaurants[i]
+            # get the columns of the restaurant table automatically instead of hardcoding them
+            cols = self.tables["Store"]
+            # create a list of the values of the customer dictionary based on the columns of the Customer table
+            self.insert_data("Store", [restaurant[column] for column in cols])
+        del csv_columns
+        del restaurants
+        del restaurant
+
+    def fill_database_categories(self):
+        # point to the datapath of the csv
+        category_file = "Data/restaurants.csv"
+        csv_columns = []
+        categories = []
+
+        # open the csv file and read it line by line
+        with open(category_file, "r") as file:
+            for i, line in enumerate(file):
+                if i == 0:
+                    # only for the first line keep the column names that are stored
+                    csv_columns = line.strip().split(",")
+
+                    continue
+                row_values = line.strip().split(",")
+                category = {}
+                # for j, word in enumerate(row_values):
+                # for every row, split the line by the comma and store the values in a dictionary, with keys as the column names and values the split values of the row
+                # append a dictionary
+                # category.append({})
+                # to the last appended dictionary add the values based on the keys that have been given
+                category[csv_columns[-1]] = row_values[-1]
+                categories.append(category)
+                # category = categories[i]
+
+                # create a list of the values of the customer dictionary based on the columns of the Customer table
+                self.insert_data("Category", [category["category"]])
+
+        del csv_columns
+        del categories
+        del category
+
+    def fill_database_dishes(self):
+        # point to the datapath of the csv
+        category_file = "Data/dishes.csv"
+        csv_columns = []
+        dishes = []
+
+        # open the csv file and read it line by line
+        with open(category_file, "r") as file:
+            for i, line in enumerate(file):
+                if i == 0:
+                    # only for the first line keep the column names that are stored
+                    csv_columns = line.strip().split(",")
+
+                    continue
+                row_values = line.strip().split(",")
+                dish = {}
+                for j, word in enumerate(row_values):
+                    dish[csv_columns[j]] = word
+                # to the last appended dictionary add the values based on the keys that have been given
+                dishes.append(dish)
+                # category = categories[i]
+                cols = self.tables["Dish"]
+
+                # create a list of the values of the customer dictionary based on the columns of the Customer table
+                self.insert_data("Dish", [dish[column] for column in cols])
+
+        del csv_columns
+        del dishes
+        del dish
+
+    @count
+    def createOrder(self, customer_email, restaurant_id, dishes):  # , quantities):
+        """Creates an order for the given customer id"""
+
+        order = {}
+        # find data of customer in database
+        customer = self.conn.execute(
+            "SELECT * FROM Customer WHERE email=?", [customer_email]
+        ).fetchone()
+
+        # find if the store is open
+        store = self.conn.execute(
+            "SELECT * FROM Store WHERE storeId=?", [restaurant_id]
+        ).fetchone()
+
+        # find if the dish is available
+        for dishName in dishes:
+            dish = self.conn.execute(
+                "SELECT * FROM Dish WHERE dishName=?", [dishName[0]]
+            ).fetchone()
+            if dish[2] == "no":
+                print("{dishName} not available")
+
+        order["orderId"] = int(f"{customer[0]}{self.createOrder.calls}")
+        order["comment"] = ""
+        order["customerEmail"] = customer_email
+        order["deliveryAFM"] = 123456789
+        order["orderTime"] = "12:12:12"
+        order["orderDate"] = "2020-12-12"
+        order["rateTime"] = "12:12:13"
+        order["rateText"] = ""
+        order["rateScore"] = 5
+        order["pickupTime"] = "12:12:12"
+        order["exp_deliveryTime"] = "12:12:12"
+        order["deliveryTime"] = "00:30:00"
+        order["address"] = f"{customer[4]} {customer[5]}"
+
+        # create the order
+        # order = [
+        #     customer_id,
+        #     restaurant_id,
+        #     ",".join(dishes),
+        #     ",".join([str(quantity) for quantity in quantities]),
+        # ]
+
+        cols = self.tables["OrderT"]
+        # insert the order into the database
+        self.insert_data("OrderT", [order[column] for column in cols])
+
+    def createMockupOrders(self):
+        """Creates mockup orders for the database"""
+
+        # get the customer ids
+        # customer = (first_element,)
+        # email = customer[0]
+        customer_emails = [
+            customer[0] for customer in self.conn.execute("SELECT email FROM Customer")
+        ]
+        # get the restaurant ids
+        restaurant_ids = [
+            restaurant[0]
+            for restaurant in self.conn.execute("SELECT storeId FROM Store")
+        ]
+
+        # create 5 orders for each customer
+        for customer_email, restaurant_id in zip(customer_emails, restaurant_ids):
+            # get all dishes from the restaurant
+            print(restaurant_id)
+            dishes = [
+                dish
+                for dish in self.conn.execute(
+                    "SELECT dishName FROM Dish WHERE storeId=?", [restaurant_id]
+                )
+            ]
+            # create a random order
+            self.createOrder(customer_email, restaurant_id, dishes)
+            # insert the order into the database
+            # self.insert_data("Order", order)
 
     def check_passwd(self, user_email, user_password):
         """Checks if the password is correct for the given email"""
@@ -133,6 +347,39 @@ class Foodies:
             # self.conn.commit()
 
         return bcrypt.checkpw(user_password.encode("utf-8"), hashed)
+
+    def createMockupFavourites(self):
+        """Creates mockup orders for the database"""
+
+        # get the customer ids
+        customer_ids = [
+            customer[0] for customer in self.conn.execute("SELECT id FROM Customer")
+        ]
+        # get the restaurant ids
+        restaurant_ids = [
+            restaurant[0] for restaurant in self.conn.execute("SELECT id FROM Store")
+        ]
+
+        # create 5 orders for each customer
+        for customer_id in customer_ids:
+            for i in range(5):
+                # create a random order
+                order = self.createRandomFavourite(customer_id, restaurant_ids)
+                # insert the order into the database
+                self.insert_data("Favourite", order)
+
+    def createRandomFavourite(self, customer_id, restaurant_ids):
+        """Creates a random order for the given customer id"""
+
+        from random import randint
+
+        # create a random order
+        order = [
+            customer_id,
+            restaurant_ids[randint(0, len(restaurant_ids) - 1)],
+            randint(1, 5),
+        ]
+        return order
 
 
 # def generate(script_path, db_path):
