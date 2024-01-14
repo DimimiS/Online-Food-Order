@@ -1,0 +1,43 @@
+category,dishName,storeId,price,availability
+burger, burger,0,3,yes
+burger, sandwich,1,2,yes
+burger, potatoes,2,5,yes
+burger, salad,3,1,yes
+chinese,noodles,10,6,yes
+chinese,sushi,11,4.9,yes
+chinese,wong ton,12,5.4,yes
+chinese,wine,13,5.9,yes
+chinese,rice,14,6.4,yes
+chinese,special dish,15,6.9,yes
+crepes,savory crepe,20,7.4,yes
+crepes,sweet crepe,21,7.9,yes
+food,fancy dish1,30,8.4,yes
+food,fancy dish2,31,8.9,yes
+food,fancy dish3,32,9.4,yes
+greek,souvlaki,40,1.9,yes
+greek,gyros,41,5.4,yes
+greek,pita,42,3.9,yes
+greek,loukaniko,43,5.4,yes
+greek,patates,44,1.9,yes
+greek,sos,45,0.2,yes
+greek,poikilia,46,12.9,yes
+ice-cream,pagoto,50,1.4,yes
+ice-cream,tourta,51,13.9,yes
+ice-cream,cookies,52,4.4,yes
+ice-cream,mini tarts,53,4.9,yes
+ice-cream,pies,54,5.4,yes
+italian,spaghetti,60,5.9,yes
+italian,pizza,61,6.4,yes
+italian,calzone,62,6.9,yes
+italian,sweet pizza,63,10.4,yes
+italian,soft drink,64,2.9,yes
+mexican,taco,70,8.4,yes
+mexican,nacho,71,8.9,yes
+mexican,burrito,72,9.4,yes
+mexican,quesadilla,73,9.9,yes
+patisserie,tarts,80,2.4,yes
+patisserie,croissants,81,2.9,yes
+patisserie,cakes,82,21.4,yes
+patisserie,mini bites,83,2.9,yes
+patisserie,coffee,84,4.4,yes
+patisserie,sfoliates,85,2.9,yes

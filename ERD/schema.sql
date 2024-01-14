@@ -2,24 +2,23 @@ CREATE TABLE IF NOT EXISTS Customer (
 	
 	-- accountId,first_name,last_name,email,address,address_number,floor
 
-	accountId VARCHAR(255) ,
-	first_name VARCHAR(255),
-	last_name VARCHAR(255),
-	email VARCHAR(255),
+	accountId 	INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	first_name 	VARCHAR(255),
+	last_name 	VARCHAR(255),
+	email 		VARCHAR(255) UNIQUE NOT NULL,
 	-- phone VARCHAR(255),
-	address VARCHAR(255),
-	address_number integer,
-	floor integer,
-	password VARCHAR(255),
-	salt VARCHAR(255),
-	PRIMARY KEY (email)
+	address 	VARCHAR(255),
+	address_number 	INTEGER,
+	floor 			INTEGER,
+	password 	VARCHAR(255),
+	salt 		VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS Store (
-	storeId integer,
-	workHours VARCHAR(255),
-	location VARCHAR(255),
-	PRIMARY KEY (storeId)
+	storeId 	INTEGER PRIMARY key AUTOINCREMENT NOT NULL,
+	name 		VARCHAR(255),
+	workHours 	VARCHAR(255),
+	location 	VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS Category (
@@ -28,21 +27,21 @@ CREATE TABLE IF NOT EXISTS Category (
 );
 
 CREATE TABLE IF NOT EXISTS Delivery (
-	AFM integer,
+	AFM INTEGER,
 	availability boolean,
 	PRIMARY KEY (AFM)
 );
 
 CREATE TABLE IF NOT EXISTS CustomerSupport (
-	AFM integer,
+	AFM INTEGER,
 	availability boolean,
 	PRIMARY KEY (AFM)
 );
 
 CREATE TABLE IF NOT EXISTS Belongs (
-	categoryName VARCHAR(255),
+	category VARCHAR(255),
 	dishName VARCHAR(255),
-	FOREIGN KEY (categoryName) REFERENCES Category (name)
+	FOREIGN KEY (category) REFERENCES Category (name)
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
 	FOREIGN KEY (dishName) REFERENCES Dish (dishName)
@@ -51,10 +50,10 @@ CREATE TABLE IF NOT EXISTS Belongs (
 );
 
 CREATE TABLE IF NOT EXISTS Includes (
-	orderId integer,
-	storeId integer,
-	dishName VARCHAR(255),
-	quantity integer,
+	orderId 	INTEGER,
+	storeId 	INTEGER,
+	dishName 	VARCHAR(255),
+	quantity 	INTEGER,
 	FOREIGN KEY (orderId) REFERENCES OrderT (orderId)
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
@@ -67,8 +66,8 @@ CREATE TABLE IF NOT EXISTS Includes (
 );
 
 CREATE TABLE IF NOT EXISTS Favourite (
-	storeId integer,
-	email VARCHAR(255),
+	storeId INTEGER,
+	email 	VARCHAR(255),
 	FOREIGN KEY (storeId) REFERENCES Store (storeId)
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
@@ -78,10 +77,10 @@ CREATE TABLE IF NOT EXISTS Favourite (
 );
 
 CREATE TABLE IF NOT EXISTS Dish (
-	dishName VARCHAR(255),
-	storeId integer,
-	availability boolean,
-	price decimal,
+	dishName 	VARCHAR(255),
+	storeId 	INTEGER,
+	availability 	boolean,
+	price 			decimal,
 	PRIMARY KEY (dishName, storeId),
 	FOREIGN KEY (storeId) REFERENCES Store (storeId)
             ON UPDATE RESTRICT
@@ -89,21 +88,20 @@ CREATE TABLE IF NOT EXISTS Dish (
 );
 
 CREATE TABLE IF NOT EXISTS OrderT (
-	orderId integer,
-	comment text,
-	customerEmail VARCHAR(255),
-	deliveryAFM integer,
-	orderTime timestamp,
-	orderDate date,
-	rateTime timestamp,
-	rateText text,
-	rateScore decimal,
-	pickupTime timestamp,
+	orderId 	INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	comment 	text,
+	accountId 	INTEGER,
+	deliveryAFM 	INTEGER,
+	orderTime 	timestamp,
+	orderDate 	date,
+	rateTime 	timestamp,
+	rateText 	text,
+	rateScore 	decimal,
+	pickupTime 	timestamp,
 	exp_deliveryTime timestamp,
-	deliveryTime timestamp,
-	address VARCHAR(255),
-	PRIMARY KEY (orderId),
-	FOREIGN KEY (customerEmail) REFERENCES Customer (email)
+	deliveryTime	 timestamp,
+	address 	VARCHAR(255),
+	FOREIGN KEY (accountId) REFERENCES Customer (accountId)
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
 	FOREIGN KEY (deliveryAFM) REFERENCES Delivery (AFM)
@@ -112,13 +110,12 @@ CREATE TABLE IF NOT EXISTS OrderT (
 );
 
 CREATE TABLE IF NOT EXISTS Change_request (
-	requestId integer,
-	orderId integer,
+	requestId 	INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	orderId 	INTEGER,
 	customerEmail VARCHAR(255),
-	AFM integer,
-	time timestamp,
+	AFM 	INTEGER,
+	time 	timestamp,
 	payment VARCHAR(255),
-	PRIMARY KEY (requestId),
 	FOREIGN KEY (orderId) REFERENCES OrderT (orderId)
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,

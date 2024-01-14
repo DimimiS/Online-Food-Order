@@ -1,0 +1,63 @@
+
+Queries
+Fill Database
+
+List:
+
+Problem with update/insert to Database
+
+Create data Queries
+Search Queries
+Fill Database
+
+Update Schema/SQL
+
+
+Fix Registration Syntax Error
+
+Find what restaurants are open
+Find if restaurant is open
+Find what restaurants are close (Area Code)
+SELECT
+  *
+FROM
+  restaurants
+WHERE
+  location LIKE CONCAT (
+    '%',
+    (
+      SELECT
+        location
+      FROM
+        users
+      WHERE
+        user_id = 'user_id'
+    ),
+    '%'
+  );
+
+Find your orders (newer is the last one of them)
+
+Find order information from order_id
+Find restaurant menu
+Find restaurants based on categories 
+
+Find dishes based on categories
+Find customer information
+Find order change appeals
+Find favourite restaurants
+Find time to get here
+
+
+Create an order (include score)
+Create favourite restaurants
+Create order change appeal
+
+
+-- Change the database, include autoincrement 
+-- Change the OrderId 
+
+
+Restaurant each have one or two categories 
+create order 
+

@@ -4,49 +4,50 @@ This is a project assigned during the Databases course at University of Patras. 
 
 ## Installation Instructions
 
-
-## Creating Virtual Environment 
+## Creating Virtual Environment
 
 ```bash
 python -m venv app
 ```
 
-### Activating Virtual Environment 
+### Activating Virtual Environment
 
 ```bash
 source app/bin/activate
 ```
 
-### Deactivate Environment 
+### Deactivate Environment
 
 ```bash
 deactivate
 ```
 
-
-## Creating requirements.txt 
+## Creating requirements.txt
 
 ```bash
 pip freeze > Code/requirements.txt
 ```
 
-## Installign requirements: 
+## Installign requirements:
 
 ```bash
-pip install -r Code/requirements.txt 
+pip install -r Code/requirements.txt
 ```
 
+# Notes
 
-# Notes 
+Saving the Data/foodie.db database as Data/foodie.sqlite is for the benefit of viewing it from vscode
 
-Saving the Data/foodie.db database as Data/foodie.sqlite is for the benefit of viewing it from vscode 
+> [!WARNING]
+> Run the Code/App on the root of the directory, not inside the Code folder
 
->[!WARNING]
-> Run the Code/App on the root of the directory, not inside the Code folder 
+To create the database :
 
-
-To create the database : 
 ```bash
 python Code/intialize.py
 ```
 
+# TODO
+
+Script, where it will do a query create,
+Με sql template για update
