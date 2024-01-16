@@ -128,7 +128,7 @@ class FoodiesMain(Main):
         print("\n")
         self.main_menu()
 
-    def search_restaurants(self):
+    def search_restaurants(self) -> None:
         # SQL command to get all the stores, future implementation will be able to discern the hours that each is open
         all_restaurants = self.db.select(
             """
@@ -167,9 +167,11 @@ class FoodiesMain(Main):
         # constantly running the app looking for user option
         # Here I suggest a wrapper that will be runnign while loop and the options
 
-        option_functions = [self.login_action, self.register_action, self.add_order]
-        # CHANGE THIS
-        option_names = ["Login", "Register", "Add order"]
+        option_functions = [
+            self.login_action,
+            self.register_action,
+        ]
+        option_names = ["Login", "Register"]
         option_title = "Main Menu"
         self.options_loader(option_functions, option_names, menu_title=option_title)
 
@@ -199,10 +201,9 @@ class FoodiesMain(Main):
 
     def order_menu(self) -> None:
         option_functions = [
-            # self.choose_restaurant,
             self.add_order,
             self.show_previous_orders,
-            self.add_favourite,
+            # self.add_favourite,
             self.rate_last_order,
             self.logged_in_menu,
         ]
@@ -210,7 +211,7 @@ class FoodiesMain(Main):
             # "Search for Restaurants",
             "Add order",
             "Show previous orders",
-            "Add Favourite",
+            # "Add Favourite",
             "Rate Last Order",
             "Exit to User Menu",
         ]
@@ -221,7 +222,7 @@ class FoodiesMain(Main):
 
     def search_menu(self) -> None:
         option_functions = [
-            self.search_restaurants,
+            self.search_restaurants_working_hours,
             self.search_dishes,
             self.search_categories,
             self.search_favourites,
@@ -245,7 +246,7 @@ class FoodiesMain(Main):
             menu_title=option_title,
         )
 
-    # ------------------ Search Functions ------------------
+    # ------------------ Other Functions -------------------
 
     def search_restaurants_working_hours(self):
         all_restaurants = self.db.select("SELECT storeId,name,workHours FROM Store")
@@ -257,6 +258,20 @@ class FoodiesMain(Main):
             print(workingHours)
 
         self.check_input("Press Enter to continue")
+
+    def working_hours_computator(self, restaurant):
+        workingHours = {}
+        for day in restaurant[2].split("] "):
+            day += "]"
+            day = day.split(": ")
+            if day[1] not in ["Kleista", "Anoichto olo to 24oro"]:
+                start, end = day[1].strip("[]").split("-")
+                # Turn the time from h:m p.m. to military time
+                start = datetime.datetime.strptime(start, "%I:%M%p").strftime("%H:%M")
+                end = datetime.datetime.strptime(end, "%I:%M%p").strftime("%H:%M")
+
+                workingHours[day[0]] = [start, end]
+        return workingHours
 
     def search_dishes(self):
         all_restaurants = self.db.select(
@@ -318,159 +333,11 @@ class FoodiesMain(Main):
 
         self.check_input("Press Enter to continue")
 
-    # ------------------ Choose Functions ------------------
-
-    def choose_restaurant(self):
-        option_functions, options_names, option_title = self.search_restaurants()
-
-        # Much needed button
-        options_names.append("Return to previous menu")
-        # Unfortunately the order is manually implemented, future implementations can be
-        option_functions.append(self.order_menu)
-
-        self.options_loader(
-            option_functions, options_names, menu_title=option_title, simple=True
-        )
-
-    def choose_dish_menu(self, storeId):
-        self.menu_presenting = True
-
-        options_functions, options_names, option_title = self.show_dishes(storeId)
-
-        options_names.append("Place order")
-        options_functions.append(self.place_order)
-
-        options_names.append("Return to previous menu")
-        options_functions.append(self.add_order)
-
-        options_names.append("Return to main menu")
-        options_functions.append(self.main_menu)
-
-        self.options_loader(
-            options_functions,
-            options_names,
-            menu_title=option_title,
-            simple=True,
-            persistent=self.menu_presenting,
-        )
-
-    def choose_dish_quantity(self, dishName, price):
-        print(self.message_wrapper([f"Choose quantity for {dishName}"]))
-        quantity = self.check_input("Enter the quantity: ")
-
-        self.order_information_d["orderList"].append(
-            {"dishName": [dishName, price, quantity]}
-        )
-
-        order_basket = [
-            f"{dish['dishName'][0]} x {dish['dishName'][2]} = {float(dish['dishName'][1])*float(dish['dishName'][2])}"
-            for dish in self.order_information_d["orderList"]
-        ]
-
-        self.notification_message = order_basket
-        self.menu_presenting = True
-
-    # ------------------ Show Functions ------------------
-
-    def show_restaurant_menu(self, storeId):
-        menu = self.db.select(
-            """
-            SELECT DISTINCT dishName,price
-            FROM Dish NATURAL JOIN Includes
-            WHERE storeId = ?
-            """,
-            [storeId],
-        )
-        if not menu:
-            self.notification_message = "No menu found"
-            return
-        else:
-            print(self.message_wrapper([f"Menu for {storeId}"]))
-            dishes = []
-            for dish in menu:
-                dishes.append(f"Dish {dish[0]}")
-                dishes.append(f"Dish {dish[1]}")
-            print(self.message_wrapper(dishes, columns=2))
-
-    def show_previous_orders(self):
-        orders = self.db.select(
-            "SELECT orderId, Customer.accountId from OrderT join Customer on Customer.accountId = OrderT.accountId where Customer.accountId = ?",
-            (self.user_id,),
-        )
-        if not orders:
-            self.notification_message = "No orders found"
-            return
-        else:
-            latest_orders = orders[::-1][:3]
-            for order in latest_orders:
-                self.show_order(order[0])
-                self.check_input("Press Enter to continue")
-
-    def show_order(self, orderId):
-        orderItems = self.db.select(
-            "SELECT * FROM OrderT WHERE orderId = ?", [orderId]
-        )[0]
-
-        dishPricesAndQuantities = self.db.select(
-            "Select dishName,price,quantity,orderID FROM Dish NATURAL JOIN Includes WHERE orderId = ?",
-            [orderId],
-        )
-        cost = sum([x[3] * x[2] for x in dishPricesAndQuantities])
-
-        message = self.message_wrapper(
-            [
-                f"Order Id: {orderItems[0]}",
-                f"Order Date: {orderItems[5]}" if orderItems[5] else "Order Date: None",
-                f"Order Time: {orderItems[4]}" if orderItems[4] else "Order Time: None",
-                f"Order Total: {cost}" if cost else "Order Total: None",
-            ]
-        )
-        print(message)
-
-        for dish in dishPricesAndQuantities:
-            message = self.message_wrapper(
-                [
-                    f"Dish Name: {dish[0]}",
-                    f"Dish Price: {dish[1]}",
-                    f"Dish Quantity: {dish[2]}",
-                ]
-            )
-            print(message)
-        # self.check_input("Press Enter to continue")
-
-    def show_dishes(self, storeId):
-        all_dishes = self.db.select(
-            """
-            SELECT DISTINCT dishName,price
-            FROM Dish 
-            WHERE storeId = ? and availability='yes'
-            """,
-            [storeId],
-        )
-
-        # Change it to display the prices for each dish as well
-        all_dishes = {
-            f"{dish[0]}, {dish[1]} €": [dish[0], dish[1]] for dish in all_dishes
-        }
-        options_names = list(all_dishes.keys())
-        option_title = "Choose a dish"
-
-        option_functions = []
-        for key in options_names:
-
-            def lambda_function(dish=key):
-                self.choose_dish_quantity(all_dishes[dish][0], all_dishes[dish][1])
-
-            option_functions.append(lambda_function)
-
-        return option_functions, options_names, option_title
-
-    # ------------------ Add Functions ------------------
-
     def add_favourite(self):
+        storeId = self.check_input("Enter the storeId: ")
         self.db.insert_data(
             "Favourite",
-            [self.username, self.check_input("Enter the storeId: ")],
+            [storeId, self.username],
         )
         all_restaurants = self.db.select(
             """
@@ -479,7 +346,7 @@ class FoodiesMain(Main):
             WHERE email = ?
             """,
             [self.username],
-        )[-1]
+        )
         # all_restaurants = [ [restaurant[0],restaurant[1]] for restaurant in all_restaurants]
         if not all_restaurants:
             self.notification_message = "No restaurants found"
@@ -490,86 +357,6 @@ class FoodiesMain(Main):
                 print(workingHours)
 
         self.check_input("Press Enter to continue")
-
-    def add_order(self):
-        self.order_information_d = {"orderList": []}
-
-        if self.username:
-            self.order_information_d["accountId"] = self.user_id
-
-        storeId = self.choose_restaurant()
-        self.order_information_d["storeId"] = storeId
-        self.check_input("Press Enter to continue")
-
-    # ------------------ Check Functions ------------------
-
-    def check_restaurant(self, storeId):
-        restaurant = self.db.select(
-            "SELECT storeId FROM Store WHERE storeId = ?", [storeId]
-        )
-        if not restaurant:
-            self.notification_message = "Restaurant not found"
-            return False
-        else:
-            return True
-
-    def working_hours_computator(self, restaurant):
-        workingHours = {}
-        for day in restaurant[2].split("] "):
-            day += "]"
-            day = day.split(": ")
-            if day[1] not in ["Kleista", "Anoichto olo to 24oro"]:
-                start, end = day[1].strip("[]").split("-")
-                # Turn the time from h:m p.m. to military time
-                start = datetime.datetime.strptime(start, "%I:%M%p").strftime("%H:%M")
-                end = datetime.datetime.strptime(end, "%I:%M%p").strftime("%H:%M")
-
-                workingHours[day[0]] = [start, end]
-        return workingHours
-
-    def place_order(self):
-        # Check if the order is empty
-        if not self.order_information_d["orderList"]:
-            self.notification_message = "Order is empty"
-            return
-        # Insert the order
-        # Select the last orderId
-        # Insert includes
-
-        # Find available Delivery
-        # Insert the order
-        self.db.insert_data(
-            "OrderT",
-            [
-                self.order_information_d["accountId"],
-                datetime.datetime.now().strftime("%Y-%m-%d"),
-                datetime.datetime.now().strftime("%H:%M:%S"),
-            ],
-            columns=["accountId", "orderDate", "orderTime"],
-        )
-
-        # Select the last orderId
-        orderId = self.db.select(
-            "SELECT orderId FROM OrderT ORDER BY orderId DESC LIMIT 1"
-        )[0][0]
-
-        # Insert includes
-        for dish in self.order_information_d["orderList"]:
-            self.db.insert_data(
-                "Includes",
-                [
-                    orderId,
-                    dish["dishName"][1],
-                    dish["dishName"][0],
-                    dish["dishName"][2],
-                ],
-            )
-
-        # Show the order
-        self.show_order(orderId)
-        self.check_input("Press Enter to continue")
-
-        return self.logged_in_menu()
 
     def rate_last_order(self):
         order = self.db.select(
@@ -606,7 +393,7 @@ class FoodiesMain(Main):
     def show_restaurant_ratings(self):
         storeId = self.check_input("Enter the storeId: ")
         if not self.check_restaurant(storeId):
-            self.notification_message("Restaurant not found")
+            # self.notification_message("Restaurant not found")
             return
 
         ratings = self.db.select(
@@ -628,6 +415,218 @@ class FoodiesMain(Main):
             print(message)
         self.check_input("Press Enter to continue")
 
+    def choose_restaurant(self):
+        option_functions, options_names, option_title = self.search_restaurants()
+
+        # Much needed button
+        options_names.append("Return to previous menu")
+        # Unfortunately the order is manually implemented, future implementations can be
+        option_functions.append(self.order_menu)
+
+        self.options_loader(
+            option_functions, options_names, menu_title=option_title, simple=True
+        )
+
+    def choose_dish_menu(self, storeId):
+        self.menu_presenting = True
+
+        options_functions, options_names, option_title = self.show_dishes(storeId)
+
+        options_names.append("Place order")
+        options_functions.append(self.place_order)
+
+        options_names.append("Return to previous menu")
+        options_functions.append(self.add_order)
+
+        options_names.append("Return to main menu")
+        options_functions.append(self.main_menu)
+
+        self.options_loader(
+            options_functions,
+            options_names,
+            menu_title=option_title,
+            simple=True,
+            persistent=self.menu_presenting,
+        )
+
+    def show_dishes(self, storeId):
+        all_dishes = self.db.select(
+            """
+            SELECT DISTINCT dishName,price
+            FROM Dish 
+            WHERE storeId = ? and availability='yes'
+            """,
+            [storeId],
+        )
+
+        # Change it to display the prices for each dish as well
+        all_dishes = {
+            f"{dish[0]}, {dish[1]} €": [dish[0], dish[1]] for dish in all_dishes
+        }
+        options_names = list(all_dishes.keys())
+        option_title = "Choose a dish"
+
+        option_functions = []
+        for key in options_names:
+
+            def lambda_function(dish=key):
+                self.choose_dish_quantity(all_dishes[dish][0], all_dishes[dish][1])
+
+            option_functions.append(lambda_function)
+
+        return option_functions, options_names, option_title
+
+    def place_order(self):
+        # Check if the order is empty
+        if not self.order_information_d["orderList"]:
+            self.notification_message = "Order is empty"
+            return
+        # Insert the order
+        # Select the last orderId
+        # Insert includes
+
+        # Find available Delivery
+        # Insert the order
+        self.db.insert_data(
+            "OrderT",
+            [
+                self.order_information_d["accountId"],
+                datetime.datetime.now().strftime("%Y-%m-%d"),
+                datetime.datetime.now().strftime("%H:%M:%S"),
+            ],
+            columns=["accountId", "orderDate", "orderTime"],
+        )
+
+        # Select the last orderId
+        orderId = self.db.select(
+            "SELECT orderId FROM OrderT ORDER BY orderId DESC LIMIT 1"
+        )[0][0]
+
+        # Insert includes
+        for dish in self.order_information_d["orderList"]:
+            self.db.insert_data(
+                "Includes",
+                [
+                    orderId,
+                    self.order_information_d["storeId"],
+                    dish["dishName"][0],
+                    dish["dishName"][2],
+                ],
+            )
+
+        # Show the order
+        self.show_order(orderId)
+        self.check_input("Press Enter to continue")
+
+        return self.logged_in_menu()
+
+    def choose_dish_quantity(self, dishName, price):
+        print(self.message_wrapper([f"Choose quantity for {dishName}"]))
+        quantity = self.check_input("Enter the quantity: ")
+
+        self.order_information_d["orderList"].append(
+            {"dishName": [dishName, price, quantity]}
+        )
+
+        order_basket = [
+            f"{dish['dishName'][0]} x {dish['dishName'][2]} = {float(dish['dishName'][1])*float(dish['dishName'][2])}"
+            for dish in self.order_information_d["orderList"]
+        ]
+
+        self.notification_message = order_basket
+        self.menu_presenting = True
+
+    def add_order(self):
+        # storeId = self.check_input("Enter the storeId: ")
+        # if not self.check_restaurant(storeId):
+        #     return
+        # self.show_restaurant_menu(storeId)
+        # self.check_input("Press Enter to continue")
+        self.order_information_d = {"orderList": []}
+
+        if self.username:
+            self.order_information_d["accountId"] = self.user_id
+
+        storeId = self.choose_restaurant()
+        self.order_information_d["storeId"] = storeId
+        self.check_input("Press Enter to continue")
+
+    def check_restaurant(self, storeId):
+        restaurant = self.db.select(
+            "SELECT storeId FROM Store WHERE storeId = ?", [storeId]
+        )
+        if not restaurant:
+            self.notification_message = "Restaurant not found"
+            return False
+        else:
+            return True
+
+    def show_restaurant_menu(self, storeId):
+        menu = self.db.select(
+            """
+            SELECT DISTINCT dishName,price
+            FROM Dish NATURAL JOIN Includes
+            WHERE storeId = ?
+            """,
+            [storeId],
+        )
+        if not menu:
+            self.notification_message = "No menu found"
+            return
+        else:
+            print(self.message_wrapper([f"Menu for {storeId}"]))
+            dishes = []
+            for dish in menu:
+                dishes.append(f"Dish {dish[0]}")
+                dishes.append(f"Dish {dish[1]}")
+            print(self.message_wrapper(dishes), columns=2)
+
+    def show_previous_orders(self):
+        orders = self.db.select(
+            "SELECT orderId, Customer.accountId from OrderT join Customer on Customer.accountId = OrderT.accountId where Customer.accountId = ?",
+            (self.user_id,),
+        )
+        if not orders:
+            self.notification_message = "No orders found"
+            return
+        else:
+            latest_orders = orders[::-1][:3]
+            for order in latest_orders:
+                self.show_order(order[0])
+                self.check_input("Press Enter to continue")
+
+    def show_order(self, orderId):
+        orderItems = self.db.select(
+            "SELECT * FROM OrderT WHERE orderId = ?", [orderId]
+        )[0]
+
+        dishPricesAndQuantities = self.db.select(
+            "SELECT dishName,price,quantity,orderID FROM Dish NATURAL JOIN Includes WHERE orderId = ?",
+            [orderId],
+        )
+        cost = sum([x[2] * x[1] for x in dishPricesAndQuantities])
+
+        message = self.message_wrapper(
+            [
+                f"Order Id: {orderItems[0]}",
+                f"Order Date: {orderItems[5]}" if orderItems[5] else "Order Date: None",
+                f"Order Time: {orderItems[4]}" if orderItems[4] else "Order Time: None",
+                f"Order Total: {cost}" if cost else "Order Total: None",
+            ]
+        )
+        print(message)
+
+        for dish in dishPricesAndQuantities:
+            message = self.message_wrapper(
+                [
+                    f"Dish Name: {dish[0]}",
+                    f"Dish Price: {dish[1]}",
+                    f"Dish Quantity: {dish[2]}",
+                ]
+            )
+            print(message)
+        # self.check_input("Press Enter to continue")
+
 
 if __name__ == "__main__":
     folder = Path(__file__).parent
@@ -636,9 +635,4 @@ if __name__ == "__main__":
     sql_path = Path(root_folder, "ERD", "sqlite.sql")
 
     app = FoodiesMain(database_path, sql_path)
-    try:
-        app.main()
-    except Exception as e:
-        print(e)
-        app.clear_screen()
-        app.main_menu()
+    app.main()
